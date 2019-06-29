@@ -1,7 +1,17 @@
 #!/bin/bash
+#
+# Action to add a trusted domain to nextcloud.
+#
+# Example:
+# $ juju run-action nextcloud/0 add-trusted-domain index=4 domain="nextcloud1.maas"
+# $ juju show-action-output a21afcd0-c231-400b-8e04-5f736ee3b70e
 
-i = $(action-get index)
-d = $(action-get domain)
+i=$(action-get index)
 
-cd /var/www/nextcloud/
-sudo -u www-data php occ config:system:set trusted_domains ${i} --value=${d}
+d=$(action-get domain)
+
+result=$(sudo -u www-data php /var/www/nextcloud/occ config:system:set trusted_domains ${i} --value=${d})
+
+trusted_domains=$(sudo -u www-data php /var/www/nextcloud/occ config:system:get trusted_domains)
+
+action-set result-map.time-completed="$(date)" result-map.message="$result"
