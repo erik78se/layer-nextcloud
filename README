@@ -20,6 +20,21 @@ juju expose nextcloud
 
 # Prepare (configuration)
 
+# Adding trusted_domain
+Its useful for testing, to be able to add a trusted_domain to the nextcloud config.php.
+This can be done with a juju action:
+```
+juju run-action nextcloud/0 add-trusted-domain index=4 domain="nextcloud.maas"
+```
+The server will now accept http://nextcloud.maas
+
+# Initial login
+http://<trusted_domain>/
+username: admin
+password: mypassword
+
+Yes, you should change this.
+
 * What domain name will the server have? - E.g. "nextcloud.example.com".
 ``` juju config nextcloud fqdn='nextcloud.example.com' ```
 
