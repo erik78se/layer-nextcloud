@@ -1,8 +1,12 @@
 
-from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any
-
+from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any, hook
 from charmhelpers.core import templating
-from charmhelpers.core.hookenv import open_port, status_set, config, unit_public_ip, log
+from charmhelpers.core.hookenv import ( open_port,
+                                        status_set,
+                                        config,
+                                        unit_public_ip,
+                                        log,
+                                        application_version_set )
 from charmhelpers.core.host import chdir, service_restart
 from charms.reactive.relations import endpoint_from_flag
 from pathlib import Path
@@ -103,17 +107,34 @@ def server_config():
 @when_none('mysql.available', 'postgres.master.available')
 def blocked_on_database():
     ''' Due for block when no database is available'''
-    status_set('blocked', "Need Mysql or Postgres database relation to continue")
+    status_set('blocked', "Need Mysql or Postgres relation to continue")
 
     return
 
+@hook('update-status')
+def statusupdate():
+    '''
+    Calls occ status and sets version every now and then (update-status).
+    :return:
+    '''
+    nextcloud_status = "sudo -u www-data /usr/bin/php occ status"
 
-def create_config_php(dbtype, extra_trusted_domains):
+    with chdir('/var/www/nextcloud'):
 
-    ctx = {'_dbtype': dbtype ,
-           '_extra_trusted_domains': extra_trusted_domains}
+        output = subprocess.run( nextcloud_status.split(), stdout=subprocess.PIPE ).stdout.split()
 
-    templating.render(source="config.php.template",
-                      target=NEXTCLOUD_CONFIG_PHP,
-                      context=ctx,
-                      perms=0o400)
+        version = output[5].decode('UTF-8')
+
+        install_status = output[2].decode('UTF-8')
+
+        if install_status == 'true':
+
+            application_version_set(version)
+
+            status_set('active', "Nextcloud is OK.")
+
+        else:
+
+            status_set('waiting', "Nextcloud install state not OK.")
+
+            log("Nextcloud install state not OK")

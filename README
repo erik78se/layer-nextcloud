@@ -5,7 +5,7 @@ Relate this charm with either mysql or postgresql
 
 ```
 juju deploy cs:~erik-lonroth/nextcloud
-juju deploy postgresql
+juju deploy postgresql --to 0:lxd
 juju relate postgresql:db nextcloud:postgres
 juju expose nextcloud
 ```
@@ -13,6 +13,7 @@ juju expose nextcloud
 # TODO:
   * Add trusted_domain with action?
   * Better default trusted_domain?
+  * ipv6 trusted_domains doesn't seem to work.
 
 # Versions used
  * Nextcloud: See in file: apache.yaml
