@@ -1,0 +1,7 @@
+#!/bin/bash
+
+i = $(action-get index)
+d = $(action-get domain)
+
+cd /var/www/nextcloud/
+sudo -u www-data php occ config:system:set trusted_domains ${i} --value=${d}

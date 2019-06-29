@@ -1,0 +1,10 @@
+add-trusted-domain:
+  description: 'Adds a trusted domain by invoking <occ config:system:set trusted_domain>.'
+  params:
+    index:
+      description: 'nextcloud trusted_domains array'
+      type: integer
+    domain:
+      decription: 'The domain --value=<example.com>'
+      type: string
+  required: [ index, domain ]

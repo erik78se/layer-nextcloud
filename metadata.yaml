@@ -1,0 +1,20 @@
+name: nextcloud
+summary: Nextcloud standalone
+maintainer: Erik Lonroth <erik.lonroth@gmail.com>
+description: |
+  Deploys a nextcloud server (HTTP) with either mysql or pgsql.
+tags:
+  - fileserver
+  - nextcloud
+subordinate: false
+series:
+  - bionic
+  - disco
+provides:
+  website:
+    interface: http
+requires:
+  mysql:
+    interface: mysql
+  postgres:
+    interface: pgsql

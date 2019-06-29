@@ -1,0 +1,29 @@
+# Overview
+
+Nextcloud server on port 80.
+Relate this charm with either mysql or postgresql
+
+```
+juju deploy cs:~erik-lonroth/nextcloud
+juju deploy postgresql
+juju relate postgresql:db nextcloud:postgres
+juju expose nextcloud
+```
+
+# TODO:
+  * Add trusted_domain with action?
+  * Better default trusted_domain?
+
+# Versions used
+ * Nextcloud: See in file: apache.yaml
+ * PHP: php7.2
+
+# Prepare (configuration)
+
+* What domain name will the server have? - E.g. "nextcloud.example.com".
+``` juju config nextcloud fqdn='nextcloud.example.com' ```
+
+* Ẃhat version of Nextcloud to download and installed: (From: https://download.nextcloud.com/server/releases/)
+```Edit: apache.yaml ```
+
+* The layer-apache installs the site under /var/www/nextcloud

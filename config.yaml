@@ -1,0 +1,16 @@
+options:
+  admin-username:
+    type: string
+    default: admin
+    description: >
+      The NextCloud admin user
+  admin-password:
+    type: string
+    default: mypassword
+    description: >
+      The NextCloud admin password
+  fqdn:
+    type: string
+    default: ""
+    description: >
+      FQDN of Nextcloud instance

@@ -1,0 +1,10 @@
+includes:
+    - 'layer:basic'
+    - 'layer:apache-php'
+    - 'interface:http'
+    - 'interface:mysql'
+    - 'interface:pgsql'
+options:
+  basic:
+    packages: []
+repo: ''
