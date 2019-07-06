@@ -1,19 +1,18 @@
-# Overview
+# How to use it
 
-Nextcloud server on port 80.
+Nextcloud server will default un on port 80.
+
 Relate this charm with either mysql or postgresql
+Works with the collabora charm if you want to have
+online editing of LibreOffice documents.
 
+# Example deploy
 ```
 juju deploy cs:~erik-lonroth/nextcloud
 juju deploy postgresql --to 0:lxd
 juju relate postgresql:db nextcloud:postgres
 juju expose nextcloud
 ```
-
-# TODO:
-  * Add trusted_domain with action?
-  * Better default trusted_domain?
-  * ipv6 trusted_domains doesn't seem to work.
 
 # Versions used
  * Nextcloud: See in file: apache.yaml
