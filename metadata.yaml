@@ -1,9 +1,9 @@
 name: nextcloud
-summary: Nextcloud standalone
+summary: Nextcloud is a collaboration office suite that keeps your data private.
 maintainer: Erik Lonroth <erik.lonroth@gmail.com>
 description: |
-  Deploys a nextcloud server (HTTP) with either mysql or pgsql.
-  Normally, you add a ssl-termination-proxy in front of nextcloud.
+  Relate nextcloud to postgresql to get started.
+  More capable installations puts an ssl-termination proxy in front and adds collabora.
 tags:
   - fileserver
   - nextcloud
