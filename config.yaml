@@ -14,3 +14,23 @@ options:
     default: ""
     description: >
       FQDN of Nextcloud instance
+  php_max_file_uploads:
+    type: int
+    default: 20
+    description: >
+      Setting for php
+  php_upload_max_filesize:
+    type: string
+    default: '512M'
+    description: >
+      Setting for php
+  php_post_max_size:
+    type: string
+    default: '512M'
+    description: >
+      Setting for php
+  php_memory_limit:
+    type: string
+    default: '1G'
+    description: >
+      Setting for php

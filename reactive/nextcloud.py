@@ -1,5 +1,5 @@
 
-from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any, hook
+from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any, hook, clear_flag
 from charmhelpers.core import templating
 from charmhelpers.core.hookenv import ( open_port,
                                         status_set,
@@ -121,20 +121,60 @@ def statusupdate():
 
     with chdir('/var/www/nextcloud'):
 
-        output = subprocess.run( nextcloud_status.split(), stdout=subprocess.PIPE ).stdout.split()
+        try:
+            output = subprocess.run( nextcloud_status.split(), stdout=subprocess.PIPE ).stdout.split()
 
-        version = output[5].decode('UTF-8')
+            version = output[5].decode('UTF-8')
 
-        install_status = output[2].decode('UTF-8')
+            install_status = output[2].decode('UTF-8')
 
-        if install_status == 'true':
+            if install_status == 'true':
 
-            application_version_set(version)
+                application_version_set(version)
+                
+                status_set('active', "Nextcloud is OK.")
 
-            status_set('active', "Nextcloud is OK.")
+            else:
 
-        else:
+                status_set('waiting', "Nextcloud install state not OK.")
 
+                log("Nextcloud install state not OK")
+                
+        except:
+            
+            log('ERROR in update-status')
+            
             status_set('waiting', "Nextcloud install state not OK.")
 
-            log("Nextcloud install state not OK")
+@when('apache.available')
+@when_any('config.changed.php_max_file_uploads',
+          'config.changed.php_upload_max_filesize',
+          'config.changed.php_post_max_size',
+          'config.changed.php_memory_limit')
+def config_php_settings():
+    '''
+    Detects changes in configuration and renders the phpmodule for
+    nextcloud (nextcloud.ini)
+    This is instead of manipulating the system wide php.ini
+    which might be overwitten or changed from elsewhere.
+    '''
+    phpmod_context = {
+        'max_file_uploads': config('php_max_file_uploads'),
+        'upload_max_filesize': config('php_upload_max_filesize'),
+        'post_max_size': config('php_post_max_size'),
+        'memory_limit': config('php_memory_limit')
+    }
+
+    templating.render(source="nextcloud.ini",
+                      target='/etc/php/7.2/mods-available/nextcloud.ini',
+                      context=phpmod_context)
+
+    subprocess.check_call(['phpenmod', 'nextcloud'])
+
+    flags=['config.changed.php_max_file_uploads',
+           'config.changed.php_upload_max_filesize',
+           'config.changed.php_memory_limit',
+           'config.changed.php_post_max_size']
+
+    for f in flags:
+        clear_flag(f)
