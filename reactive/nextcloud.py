@@ -171,6 +171,8 @@ def config_php_settings():
 
     subprocess.check_call(['phpenmod', 'nextcloud'])
 
+    subprocess.check_call(['systemctl', 'reload', 'apache2'])
+
     flags=['config.changed.php_max_file_uploads',
            'config.changed.php_upload_max_filesize',
            'config.changed.php_memory_limit',

@@ -3,12 +3,12 @@ options:
     type: string
     default: admin
     description: >
-      The NextCloud admin user
+      The NextCloud admin user, only used at deploy, change with occ or web gui.
   admin-password:
     type: string
     default: mypassword
     description: >
-      The NextCloud admin password
+      The NextCloud admin password, only used at deploy, change with occ or web gui
   fqdn:
     type: string
     default: ""
