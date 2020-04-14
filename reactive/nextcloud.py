@@ -1,6 +1,6 @@
-
+import os
 from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any, hook, clear_flag
-from charmhelpers.core import templating
+from charmhelpers.core import templating, host, unitdata
 from charmhelpers.core.hookenv import ( open_port,
                                         status_set,
                                         config,
@@ -11,11 +11,11 @@ from charmhelpers.core.host import chdir, service_restart
 from charms.reactive.relations import endpoint_from_flag
 from pathlib import Path
 import subprocess
-
+from reactive import storage
 
 NEXTCLOUD_CONFIG_PHP = '/var/www/nextcloud/config/config.php'
 
-
+@when('apache.available')
 @when_any('mysql.available', 'postgres.master.available')
 @when_not('nextcloud.initdone')
 def init_nextcloud():
@@ -23,6 +23,23 @@ def init_nextcloud():
     mysql = endpoint_from_flag('mysql.available')
 
     postgres = endpoint_from_flag('postgres.master.available')
+
+    # Since the storage hooks are ran before installation,
+    # the data_dir can have been optionally changed by the operator.
+    ncdata_dir = unitdata.kv().get("nextcloud.storage.data.mount")
+
+    if os.path.exists(ncdata_dir):
+        # Use non default for nextcloud
+
+        log("nexcloud storage location for data set as: {}".format(ncdata_dir))
+
+        host.chownr(ncdata_dir, "www-data", "www-data", follow_links=False)
+
+        os.chmod(ncdata_dir, 0o700)
+
+    else:
+        # Use default for nextcloud
+        ncdata_dir = '/var/www/nextcloud/data'
 
     ctxt = {'dbname': None,
             'dbuser': None,
@@ -32,7 +49,7 @@ def init_nextcloud():
             'dbtype': None,
             'admin_username': config().get('admin-username'),
             'admin_password': config().get('admin-password'),
-            'data_dir': Path('/var/www/nextcloud/data'),
+            'data_dir': Path(ncdata_dir),
             }
 
     if mysql:
@@ -67,8 +84,6 @@ def init_nextcloud():
                       "--database-user {dbuser} --admin-user {admin_username} "
                       "--admin-pass {admin_password} "
                       "--data-dir {data_dir} ").format(**ctxt)
-
-    log(nextcloud_init) #TODO: Remove this
 
     with chdir('/var/www/nextcloud'):
 
@@ -171,7 +186,9 @@ def config_php_settings():
 
     subprocess.check_call(['phpenmod', 'nextcloud'])
 
-    subprocess.check_call(['systemctl', 'reload', 'apache2'])
+    host.service_reload('apache2')
+
+    # subprocess.check_call(['systemctl', 'reload', 'apache2'])
 
     flags=['config.changed.php_max_file_uploads',
            'config.changed.php_upload_max_filesize',
