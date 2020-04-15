@@ -115,7 +115,7 @@ def init_nextcloud():
 
     open_port(port='80')
 
-    status_set('maintenance', "Nextcloud init complete.")
+    status_set('active', "Nextcloud init complete.")
 
 
 
