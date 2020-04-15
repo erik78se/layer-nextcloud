@@ -5,13 +5,40 @@ This nextcloud server will default run on port 80.
 Relate this charm with either mysql or postgresql.
 
 ### Example deploy
-Below is a manual test deployment without SSL/TLS:
+Below is a manual test deployment without SSL/TLS using a single machine and 4G ram. 
 ```
-juju deploy cs:~erik-lonroth/nextcloud
-juju deploy postgresql
+juju deploy cs:~erik-lonroth/nextcloud --constraints="mem=4G"
+juju deploy postgresql --to 0
 juju relate postgresql:db nextcloud:postgres
 juju expose nextcloud
 ```
+
+### Example deploy with separate storage
+This deploys nextcloud and places the data directory on a separate disk.
+```
+juju deploy cs:~erik-lonroth/nextcloud --storage data=120G --constraints="mem=8G"
+juju deploy postgresql --to 0
+juju relate postgresql:db nextcloud:postgres
+juju expose nextcloud
+```
+
+You can use the [juju storage] functionality to achieve the same thing on many clouds.
+
+Attaching storage to a already running instance of this charm is supported as:
+
+```bash
+juju add-storage nextcloud/0 data=ebs,10G,1
+```
+The charm will then:
+ * move the current /var/www/nextcloud/data location to a backup directory
+ /var/www/nextcloud/data-<someinteger>.
+ * rsync data to from the data directory into the new disk 
+ * Create a symlink from /var/www/nextcloud/data to the new disk with the migrated data.
+
+Use this with caution of you have alot (terrabytes) of data already in your installation 
+as a migration process of that sort can be scary.
+
+For a GB:s of data under /var/www/nextcloud/data, you should be good and no data will be deleted.
 
 ### Example deploy of a bundle
 The [nextcloud-collabora-tls bundle](https://jujucharms.com/u/erik-lonroth/nextcloud-collabora-tls/bundle/)
@@ -78,3 +105,4 @@ I will update this charm on your explicit request in the [Github repo]. I'll acc
  [Maintainer]: https://eriklonroth.com
  [nextcloud releases]: https://download.nextcloud.com/server/releases/
  [occ]: https://docs.nextcloud.com/server/16/admin_manual/configuration_server/occ_command.html
+ [juju storage]: https://discourse.juju.is/t/using-juju-storage/1079#provider-support
