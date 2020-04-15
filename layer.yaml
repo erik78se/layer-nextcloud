@@ -4,6 +4,8 @@ includes:
     - 'interface:http'
     - 'interface:mysql'
     - 'interface:pgsql'
+    - "layer:apt"
+
 options:
   basic:
     packages: []
