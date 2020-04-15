@@ -25,4 +25,6 @@ storage:
     type: filesystem
     description: Primary nextcloud datadirectory.
     minimum-size: 100M
-    location: /mnt/ncdata0 # This will be used instead of /var/www/nextcloud/data
+    location: /mnt/ncdata # This will be used instead of /var/www/nextcloud/data
+    multiple:
+      range: 0-1

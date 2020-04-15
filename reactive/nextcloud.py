@@ -1,5 +1,5 @@
 import os
-from charms.reactive import when_all, when, when_not, set_flag, when_none, when_any, hook, clear_flag
+from charms.reactive import is_state, when_all, when, when_not, set_flag, when_none, when_any, hook, clear_flag
 from charmhelpers.core import templating, host, unitdata
 from charmhelpers.core.hookenv import ( open_port,
                                         status_set,
@@ -11,7 +11,7 @@ from charmhelpers.core.host import chdir, service_restart
 from charms.reactive.relations import endpoint_from_flag
 from pathlib import Path
 import subprocess
-from reactive import storage
+
 
 NEXTCLOUD_CONFIG_PHP = '/var/www/nextcloud/config/config.php'
 
@@ -20,26 +20,32 @@ NEXTCLOUD_CONFIG_PHP = '/var/www/nextcloud/config/config.php'
 @when_not('nextcloud.initdone')
 def init_nextcloud():
 
+    log("Installation and initialization of nextcloud begins.")
+
     mysql = endpoint_from_flag('mysql.available')
 
     postgres = endpoint_from_flag('postgres.master.available')
 
-    # Since the storage hooks are ran before installation,
-    # the data_dir can have been optionally changed by the operator.
-    ncdata_dir = unitdata.kv().get("nextcloud.storage.data.mount")
+    # Set to 'location' in metadata.yaml IF provided on deploy.
+    # We cant use the default, since layer:apache-php will not deploy
+    # the nextcloud site properly if we pre-build the directory structure
+    # under /var/www/nextcloud
+    # Hence, we need to use a directory outside of the /var/www/nextcloud structure
+    # when we use juju storage here (since we are to use the layer:apache-php).
+    data_dir = unitdata.kv().get("nextcloud.storage.data.mount")
 
-    if os.path.exists(ncdata_dir):
+    if os.path.exists(str(data_dir)):
         # Use non default for nextcloud
 
-        log("nexcloud storage location for data set as: {}".format(ncdata_dir))
+        log("nextcloud storage location for data set as: {}".format(data_dir))
 
-        host.chownr(ncdata_dir, "www-data", "www-data", follow_links=False)
+        host.chownr(data_dir, "www-data", "www-data", follow_links=False, chowntopdir=True)
 
-        os.chmod(ncdata_dir, 0o700)
+        os.chmod(data_dir, 0o700)
 
     else:
-        # Use default for nextcloud
-        ncdata_dir = '/var/www/nextcloud/data'
+        # If no custom data_dir get to us via storage, we use the default
+        data_dir = '/var/www/nextcloud/data'
 
     ctxt = {'dbname': None,
             'dbuser': None,
@@ -49,7 +55,7 @@ def init_nextcloud():
             'dbtype': None,
             'admin_username': config().get('admin-username'),
             'admin_password': config().get('admin-password'),
-            'data_dir': Path(ncdata_dir),
+            'data_dir': Path(data_dir),
             }
 
     if mysql:
@@ -60,11 +66,6 @@ def init_nextcloud():
         ctxt['dbport'] = mysql.port()
         ctxt['dbtype'] = 'mysql'
     elif postgres:
-        # ConnectionString(host='1.2.3.4',
-        # dbname='mydb',
-        # port = 5432,
-        # user = 'anon',
-        # password = 'secret')
         ctxt['dbname'] = postgres.master.dbname
         ctxt['dbuser'] = postgres.master.user
         ctxt['dbpass'] = postgres.master.password
@@ -77,6 +78,8 @@ def init_nextcloud():
     status_set('maintenance', "Initializing Nextcloud")
 
     # Comment below init to test installation manually
+
+    log("Running nexcloud occ installation...")
 
     nextcloud_init = ("sudo -u www-data /usr/bin/php occ  maintenance:install "
                       "--database {dbtype} --database-name {dbname} "
@@ -97,26 +100,31 @@ def init_nextcloud():
         Path('/var/www/nextcloud/config/config.php').open().read().replace(
             "localhost", config().get('fqdn') or unit_public_ip()))
 
-    set_flag('nextcloud.initdone')
-
-    status_set('active', "Nextcloud init complete")
-
-
-@when_all('nextcloud.initdone', 'apache.available')
-@when_not('nextcloud.serviceavailable')
-def server_config():
-
+    # Enable required modules.
     for module in ['rewrite', 'headers', 'env', 'dir', 'mime']:
 
         subprocess.call(['a2enmod', module])
 
-    open_port(port='80')
+    set_flag('apache_reload_needed')
 
-    set_flag('nextcloud.serviceavailable')
+    set_flag('nextcloud.initdone')
 
     set_flag('apache.start')
 
-    status_set('active', "Ready")
+    log("Installation and initialization of nextcloud completed.")
+
+    open_port(port='80')
+
+    status_set('maintenance', "Nextcloud init complete.")
+
+
+
+@when_all('apache.started', 'apache_reload_needed')
+def reload_apache2():
+
+    host.service_reload('apache2')
+
+    clear_flag('apache_reload_needed')
 
 
 @when_none('mysql.available', 'postgres.master.available')
@@ -127,7 +135,7 @@ def blocked_on_database():
     return
 
 @hook('update-status')
-def statusupdate():
+def update_status():
     '''
     Calls occ status and sets version every now and then (update-status).
     :return:
@@ -153,12 +161,8 @@ def statusupdate():
 
                 status_set('waiting', "Nextcloud install state not OK.")
 
-                log("Nextcloud install state not OK")
-                
         except:
-            
-            log('ERROR in update-status')
-            
+
             status_set('waiting', "Nextcloud install state not OK.")
 
 @when('apache.available')
@@ -186,9 +190,11 @@ def config_php_settings():
 
     subprocess.check_call(['phpenmod', 'nextcloud'])
 
-    host.service_reload('apache2')
+    if is_state("apache.started"):
 
-    # subprocess.check_call(['systemctl', 'reload', 'apache2'])
+        log("reloading apache2 after reconfiguration")
+
+        host.service_reload('apache2')
 
     flags=['config.changed.php_max_file_uploads',
            'config.changed.php_upload_max_filesize',
