@@ -140,11 +140,15 @@ def migrate_data():
 
     os.symlink(new_data_dir, old_data_dir) # /mnt/ncdata0 <- /var/www/nextcloud/data
 
+    status_set("maintenance", "Created symlink to new data directory")
+
     host.chownr(new_data_dir, "www-data", "www-data", follow_links=False, chowntopdir=True)
+
+    status_set("maintenance", "Ensured proper permissions on new data directory")
 
     os.chmod(new_data_dir, 0o700)
 
-    status_set("maintenance", "Migration complete.")
+    status_set("maintenance", "Migration completed.")
 
     # Bring back from maintenance mode.
     maintenance_mode(False)
@@ -153,7 +157,7 @@ def migrate_data():
 
     host.service_start('apache2') # don't wait for the layer to catch the flag
 
-    status_set("active", "Nextcloud OK.")
+    status_set("active", "Nextcloud is OK.")
 
     reactive.set_state("nextcloud.storage.data.migrated")
 
