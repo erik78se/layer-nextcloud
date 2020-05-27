@@ -31,7 +31,7 @@ juju add-storage nextcloud/0 data=ebs,10G,1
 ```
 The charm will then:
  * move the current /var/www/nextcloud/data location to a backup directory
- /var/www/nextcloud/data-<someinteger>.
+ /var/www/nextcloud/data-XXXXXXXXX.
  * rsync data to from the data directory into the new disk 
  * Create a symlink from /var/www/nextcloud/data to the new disk with the migrated data.
 
@@ -46,7 +46,7 @@ deploys a full collaboration office suite with [collabora online](https://www.co
 with letsencrypt SSL certificates.
 
 ### Initial login
-http://<trusted_domain>/
+http://my.nextcloud.ip/
 
 username: admin
 
@@ -84,6 +84,23 @@ This action adds a trusted_domain through the nextcloud [occ] command.
 juju run-action nextcloud/0 add-trusted-domain index=4 domain="nextcloud.my.local.domain"
 ```
 The server will now accept requests via http://nextcloud.my.local.domain
+
+### action: add-missing-indices
+This action runs 'occ db:add-missing-indices' as part of optimizing the database, 
+which can be done safely while the server is online.
+
+```juju run-action nextcloud/0 add-missing-indices```
+
+### action: convert-filecache-bigint
+This action runs 'occ db:aconvert-filecache-bigint' as part of optimizing the database.
+This also takes care of placing the server in maintenance while the action is running.
+
+```juju run-action nextcloud/0 convert-filecache-bigint```
+
+### action: maintenance
+Takes the site in (enable=true) or out (enable=false) of maintenance mode.
+
+```juju run-action nextcloud/0 maintenance enable=true```
 
 
 ## Installed version of Nextcloud

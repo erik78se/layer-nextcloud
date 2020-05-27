@@ -1,6 +1,0 @@
-sudo nextcloud.occ config:system:set trusted_domains 1 --value=192.168.1.16
-System config value trusted_domains => 1 set to string 192.168.1.16
-
-sudo nextcloud.occ config:system:get trusted_domains
-localhost
-192.168.1.16

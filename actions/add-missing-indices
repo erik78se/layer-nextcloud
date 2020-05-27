@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Action to add missing-indices via occ.
+#
+# Example:
+# $ juju run-action nextcloud/0 add-missing-indices --wait
+
+sudo -u www-data php /var/www/nextcloud/occ db:add-missing-indices

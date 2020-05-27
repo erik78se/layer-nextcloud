@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Action to convert-filecache-bigint on the database via occ
+# This action places the site in maintenance mode to protect it while this action runs.
+#
+# Example:
+# $ juju run-action nextcloud/0 convert-filecache-bigint --wait
+
+sudo -u www-data php /var/www/nextcloud/occ maintenance:mode --on
+sudo -u www-data php /var/www/nextcloud/occ db:convert-filecache-bigint --no-interaction
+sudo -u www-data php /var/www/nextcloud/occ maintenance:mode --off

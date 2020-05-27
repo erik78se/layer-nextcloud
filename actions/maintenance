@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+# Action to out the nextcloud site on or off to maintenance.
+#
+# Example:
+# $ juju run-action nextcloud/0 maintenence enable=true --wait
+
+mode=$(action-get enable)
+
+if [ "$mode" == "False" ]; then
+  sudo -u www-data php /var/www/nextcloud/occ maintenance:mode --off
+elif [ "$mode" == "True" ]; then
+  sudo -u www-data php /var/www/nextcloud/occ maintenance:mode --on
+else
+  echo "Wrong argument to action, use either on or off"
+  exit 1
+fi
