@@ -9,4 +9,5 @@ includes:
 options:
   basic:
     packages: []
+    use_venv: False
 repo: ''
