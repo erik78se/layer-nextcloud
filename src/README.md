@@ -30,10 +30,10 @@ Attaching storage to a already running instance of this charm is supported as:
 juju add-storage nextcloud/0 data=ebs,10G,1
 ```
 The charm will then:
- * move the current /var/www/nextcloud/data location to a backup directory
+* move the current /var/www/nextcloud/data location to a backup directory
  /var/www/nextcloud/data-XXXXXXXXX.
- * rsync data to from the data directory into the new disk 
- * Create a symlink from /var/www/nextcloud/data to the new disk with the migrated data.
+* rsync data to from the data directory into the new disk 
+* Create a symlink from /var/www/nextcloud/data to the new disk with the migrated data.
 
 Use this with caution of you have alot (terrabytes) of data already in your installation 
 as a migration process of that sort can be scary.
